@@ -1,0 +1,6 @@
+Założenia aplikacji.
+Wyświetlanie wybranych danych na wykresie,
+Wybór przedziału czasowego
+Zapisywanie wykresu w postaci pliku jpg lub png
+
+Komunikacja z lokalną bazą danych
