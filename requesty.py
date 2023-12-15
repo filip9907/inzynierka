@@ -39,9 +39,10 @@ def get_raw_data(session, start_date, end_date=None):
         print(response.status_code)
         print(response.text)
         response.raise_for_status()
-
+#login=""
+#passwrd=""
 # Previous code for login
-session = login("achim39@wp.pl", "Jemielnica1!")
+session = login(login, passwrd)
 
 # Example usage of get_raw_data with specific parameters
 start_date = datetime.date(2023, 1, 1)
