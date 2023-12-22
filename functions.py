@@ -1,7 +1,13 @@
-#dodaje 
 import pandas as pd
+import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from tkcalendar import DateEntry
+from ttkthemes import ThemedStyle # Import ThemedStyle from ttktheme
+from tkinter import messagebox 
 import sqlite3
-
 def del_unit(df):
     df['Rodzaj'] = df['Rodzaj'].str.replace(r'\[.*\]', '', regex=True)
     return df
@@ -36,6 +42,10 @@ def get_dataframe_by_name(dataframes_list, name):
             return df
     return None
 
+# Data processing
+
+
+
 
 def handle_24_hour_time(value):
     if pd.isnull(value):  # Check if the value is NaN
@@ -48,66 +58,18 @@ def handle_24_hour_time(value):
 
     return value
 
-def prepare_data(df):
+
+def prepare_data(df, rodzaj):
     df = remove_spaces_from_column_names(df)
     df['Data'] = df['Data'].apply(handle_24_hour_time)  # Apply custom function to handle '24:00'
     df['Data'] = pd.to_datetime(df['Data'], format='%Y-%m-%d %H:%M')
     df = drop_columns_with_all_nan(df)
-    
-    # Extract unit information from 'Rodzaj' column and create a new 'Unit' column
-    df['Unit'] = df['Rodzaj'].str.extract(r'\[(.*?)\]')[0].str.strip()
     df = del_unit(df)
-    
     column_name = 'Rodzaj'
     resulting_dataframes = split_dataframe_to_list(df, column_name)
     set_dataframe_names_from_rodzaj(resulting_dataframes)
-    
-    # Reset index and convert 'Data' column to datetime for each dataframe
-    for df_part in resulting_dataframes:
-        df_part.reset_index(drop=True, inplace=True)
-        df_part['Data'] = pd.to_datetime(df_part['Data'], format='%Y-%m-%d %H:%M')
-    
-    return resulting_dataframes
-
-def create_table(cursor, table_name, df_part):
-    # Extract column names from the DataFrame
-    columns = list(df_part.columns)
-
-    # Generate the CREATE TABLE statement dynamically
-    create_table_statement = f'''
-        CREATE TABLE IF NOT EXISTS "{table_name}" (
-            {", ".join(f'"{col}" {df_part[col].dtype}' for col in columns)},
-            PRIMARY KEY ("Data")
-        );
-    '''
-
-    # Execute the CREATE TABLE statement
-    cursor.execute(create_table_statement)
-
-
-def insert_data(cursor, table_name, df_part):
-    # Insert data into the table, replacing existing records with the same primary key (Data)
-    df_part.to_sql(table_name, conn, if_exists='append', index=False, index_label='Data')
-
-
-csv_file_path = 'duze.csv'
-
-# Read the CSV file into a Pandas DataFrame
-df = pd.read_csv(csv_file_path, delimiter=';')
-dataframes = prepare_data(df)
-
-# Connect to SQLite database
-conn = sqlite3.connect('baza.db')
-cursor = conn.cursor()
-
-# Iterate through dataframes and insert data into tables
-for df_part in dataframes:
-    table_name = df_part.name
-    print(table_name)
-
-    create_table(cursor, table_name, df_part)
-    insert_data(cursor, table_name, df_part)
-
-# Commit the changes and close the connection
-conn.commit()
-conn.close()
+    selected_dataframe = get_dataframe_by_name(resulting_dataframes, rodzaj)
+    selected_dataframe.reset_index(drop=True, inplace=True)
+    selected_dataframe = selected_dataframe.iloc[:, :-1]
+    selected_dataframe['Data'] = pd.to_datetime(selected_dataframe['Data'], format='%Y-%m-%d %H:%M')
+    return resulting_dataframes, selected_dataframe
