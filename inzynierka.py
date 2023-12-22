@@ -135,18 +135,50 @@ def update_diagram():
     print(f"Selected DataFrame for {selected_values} within the date range:\n{combined_dataframe}")
 
     ax.clear()
-    for index, selected_dataframe in enumerate(selected_dataframes):
+
+    # Create a dictionary to store the secondary axes for each DataFrame
+    secondary_axes = {}
+
+    # Define colors for each DataFrame
+    colors = ['blue', 'green', 'red', 'purple', 'orange', 'brown']
+
+    for index, (selected_dataframe, color) in enumerate(zip(selected_dataframes, colors)):
         selected_dataframe_filtered = selected_dataframe[
             (selected_dataframe['Data'] >= start_date) & (selected_dataframe['Data'] <= end_date)
         ]
-        ax.plot(selected_dataframe_filtered['Data'], selected_dataframe_filtered['Wartość'], label=f"DataFrame {index}")
 
-    ax.legend()
-    ax.set_ylabel('Wartość [kWh]')
+        # Extract unit information from the last column values
+        unit = selected_dataframe.iloc[-1, -1]  # Assuming the unit is in the last row of the last column
+        lab= selected_dataframe.iloc[-2, -2]  # Assuming the unit is in the last row of the last column
+        label = f"{lab} ({unit})"
+        
+        # Use twinx() to create a secondary y-axis for each additional DataFrame
+        if index == 0:
+            ax.plot(selected_dataframe_filtered['Data'], selected_dataframe_filtered['Wartość'],
+                    label=label, color=color)
+        else:
+            secondary_axes[index] = ax.twinx()
+            secondary_axes[index].plot(selected_dataframe_filtered['Data'], selected_dataframe_filtered['Wartość'],
+                                       label=label, linestyle='dashed', color=color)
+
+    # Set labels and legend for the primary y-axis
+    ax.set_ylabel('Primary Y-Axis')
     ax.tick_params(axis='x', rotation=45)
     ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.legend(loc='upper left')
+
+    # Set labels and legends for the secondary y-axes
+    for index, secondary_ax in secondary_axes.items():
+        unit = selected_dataframes[index].iloc[-1, -1]  # Assuming the unit is in the last row of the last column
+        secondary_ax.set_ylabel(f"Secondary Y-Axis {index} ({unit})")
+        secondary_ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        secondary_ax.legend(loc='upper right')
 
     canvas.draw()
+
+
+
+
 
 
 
