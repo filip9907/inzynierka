@@ -31,6 +31,7 @@ def import_tables_from_database(database_path):
         table_name = table_name[0]
         query = f'SELECT * FROM "{table_name}" ORDER BY Data ASC;'  # Enclose table name with spaces in double quotes
         df = pd.read_sql_query(query, conn)
+        df = df.drop_duplicates()
         df['Data']=pd.to_datetime(df['Data'])
         dataframes_list.append(df)
     # Close the connection
@@ -73,7 +74,7 @@ select_power_label.pack()
 diagram_var = tk.StringVar(app)
 
 # Define diagram_options
-diagram_options = ["pobrana", "oddana", "bierna_indukcyjna", "bierna_pojemnościowa", "pobrana_po_zbilansowaniu",
+diagram_options = ["pobrana", "oddana", "bierna_indukcyjna", "bierna_pojemnosciowa", "pobrana_po_zbilansowaniu",
                    "oddana_po_zbilansowaniu"]
 
 # Create the listbox with padding and expand
