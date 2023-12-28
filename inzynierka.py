@@ -107,13 +107,25 @@ def save_diagram():
 # Button to update and display the selected diagram
 # Button to update and display the selected diagram
 def update_diagram():
+    # Clear the figure and axes
+    fig.clear()
+    ax = fig.add_subplot(111)
+    ax.set_facecolor('#f0f0f0')  # Set background color
+    ax.grid(True, linestyle='--', alpha=0.6)  # Add grid lines
     selected_values = diagram_listbox.curselection()
 
     if not selected_values:
         return  # No valid selection, do nothing
 
+    # Clear the axes before plotting new data
+    ax.clear()
+
+    # Clear the selected_dataframes list
+    selected_dataframes = []
+
     # Use the actual dataframe names from diagram_options
-    selected_dataframes = [dataframes_dict[diagram_options[index]] for index in selected_values]
+    for index in selected_values:
+        selected_dataframes.append(dataframes_dict[diagram_options[index]])
 
     combined_dataframe = pd.concat(selected_dataframes)
 
@@ -134,8 +146,6 @@ def update_diagram():
 
     print(f"Selected DataFrame for {selected_values} within the date range:\n{combined_dataframe}")
 
-    ax.clear()
-
     # Create a dictionary to store the secondary axes for each DataFrame
     secondary_axes = {}
 
@@ -149,9 +159,9 @@ def update_diagram():
 
         # Extract unit information from the last column values
         unit = selected_dataframe.iloc[-1, -1]  # Assuming the unit is in the last row of the last column
-        lab= selected_dataframe.iloc[-2, -2]  # Assuming the unit is in the last row of the last column
+        lab = selected_dataframe.iloc[-2, -2]  # Assuming the unit is in the last row of the last column
         label = f"{lab} ({unit})"
-        
+
         # Use twinx() to create a secondary y-axis for each additional DataFrame
         if index == 0:
             ax.plot(selected_dataframe_filtered['Data'], selected_dataframe_filtered['Wartość'],
@@ -175,6 +185,8 @@ def update_diagram():
         secondary_ax.legend(loc='upper right')
 
     canvas.draw()
+
+
 
 
 
