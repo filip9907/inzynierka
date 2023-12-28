@@ -2,6 +2,7 @@
 
 # libs
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
@@ -33,6 +34,7 @@ def import_tables_from_database(database_path):
         df = pd.read_sql_query(query, conn)
         df = df.drop_duplicates()
         df['Data']=pd.to_datetime(df['Data'])
+        df['Wartość'] = df['Wartość'].str.replace(',', '.').astype(float)
         dataframes_list.append(df)
     # Close the connection
     conn.close()
@@ -174,14 +176,17 @@ def update_diagram():
     # Set labels and legend for the primary y-axis
     ax.set_ylabel('Primary Y-Axis')
     ax.tick_params(axis='x', rotation=45)
-    ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(nbins='auto'))
+    max_value_primary_axis = combined_dataframe['Wartość'].max()  # Get the maximum value within the displayed range
+    max_value_primary_axis = float(max_value_primary_axis)
+    #ax.set_yticks(np.linspace(0, max_value_primary_axis, num=7))
     ax.legend(loc='upper left')
 
     # Set labels and legends for the secondary y-axes
     for index, secondary_ax in secondary_axes.items():
         unit = selected_dataframes[index].iloc[-1, -1]  # Assuming the unit is in the last row of the last column
         secondary_ax.set_ylabel(f"Secondary Y-Axis {index} ({unit})")
-        secondary_ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        secondary_ax.yaxis.set_major_locator(plt.MaxNLocator(nbins='auto'))
         secondary_ax.legend(loc='upper right')
 
     canvas.draw()
