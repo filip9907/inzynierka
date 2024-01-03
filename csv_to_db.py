@@ -1,4 +1,6 @@
 #dodaje 
+import tkinter as tk
+from tkinter import filedialog, messagebox
 import pandas as pd
 import sqlite3
 
@@ -85,29 +87,58 @@ def create_table(cursor, table_name, df_part):
     cursor.execute(create_table_statement)
 
 
-def insert_data(cursor, table_name, df_part):
+def insert_data(cursor, table_name, df_part, conn):
     # Insert data into the table, replacing existing records with the same primary key (Data)
     df_part.to_sql(table_name, conn, if_exists='append', index=False, index_label='Data')
 
 
-csv_file_path = 'duze.csv'
 
-# Read the CSV file into a Pandas DataFrame
-df = pd.read_csv(csv_file_path, delimiter=';')
-dataframes = prepare_data(df)
+class DataProcessingApp:
+    def __init__(self, master):
+        self.master = master
+        master.title("Data Processing App")
 
-# Connect to SQLite database
-conn = sqlite3.connect('baza.db')
-cursor = conn.cursor()
+        self.label = tk.Label(master, text="Select CSV file:")
+        self.label.pack()
 
-# Iterate through dataframes and insert data into tables
-for df_part in dataframes:
-    table_name = df_part.name
-    print(table_name)
+        self.browse_button = tk.Button(master, text="Browse", command=self.browse_csv)
+        self.browse_button.pack()
 
-    create_table(cursor, table_name, df_part)
-    insert_data(cursor, table_name, df_part)
+        self.process_button = tk.Button(master, text="Process Data", command=self.process_data)
+        self.process_button.pack()
 
-# Commit the changes and close the connection
-conn.commit()
-conn.close()
+    def browse_csv(self):
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        self.csv_file_path = file_path
+        self.label.config(text=f"Selected CSV file: {file_path}")
+
+    def process_data(self):
+        if hasattr(self, 'csv_file_path'):
+            try:
+                df = pd.read_csv(self.csv_file_path, delimiter=';')
+                dataframes = prepare_data(df)
+
+                # Connect to SQLite database
+                conn = sqlite3.connect('baza.db')
+                cursor = conn.cursor()
+
+                # Iterate through dataframes and insert data into tables
+                for df_part in dataframes:
+                    table_name = df_part.name
+                    create_table(cursor, table_name, df_part)
+                    insert_data(cursor, table_name, df_part,conn)
+
+                # Commit the changes and close the connection
+                conn.commit()
+                conn.close()
+
+                messagebox.showinfo("Success", "Data processing completed successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {str(e)}")
+        else:
+            messagebox.showwarning("Warning", "Please select a CSV file first!")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = DataProcessingApp(root)
+    root.mainloop()
